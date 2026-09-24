@@ -1,0 +1,34 @@
+{
+  "evaluation_date": "2026-09-17T15:36:31.323037",
+  "weights": "models/best.pt",
+  "data": "data/processed/data.yaml",
+  "split": "val",
+  "device": "mps",
+  "metrics": {
+    "mAP50": 0.789304643082244,
+    "mAP50_95": 0.4636816632752406,
+    "precision": 0.8921157993419069,
+    "recall": 0.7054657816737505,
+    "per_class": {
+      "Hardhat": {
+        "ap50": 0.8746936740869478,
+        "ap50_95": 0.5421982492954762,
+        "precision": 0.9310783465512842,
+        "recall": 0.7848101265822784
+      },
+      "NO-Hardhat": {
+        "ap50": 0.682494866809715,
+        "ap50_95": 0.35010245536070195,
+        "precision": 0.9101317197030121,
+        "recall": 0.6086956521739131
+      },
+      "Person": {
+        "ap50": 0.8107253883500695,
+        "ap50_95": 0.4987442851695434,
+        "precision": 0.8351373317714245,
+        "recall": 0.7228915662650602
+      }
+    }
+  },
+  "results_dir": "/Users/mrtun/Documents/Work/Portfolio/Project/DTSS/runs/detect/val-6"
+}

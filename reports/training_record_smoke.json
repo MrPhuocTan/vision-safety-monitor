@@ -1,0 +1,23 @@
+{
+  "training_date": "2026-09-17T09:29:04.442628",
+  "mode": "smoke",
+  "config": {
+    "data": "data/processed/data.yaml",
+    "base_model": "yolov8n.pt",
+    "epochs": 2,
+    "batch": 4,
+    "imgsz": 640,
+    "device": "cpu",
+    "seed": 42
+  },
+  "environment": {
+    "python_version": "3.13.7",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "processor": "arm",
+    "torch_version": "2.14.0",
+    "cuda_available": false,
+    "mps_available": true,
+    "ultralytics_version": "8.4.153"
+  },
+  "results_dir": "/Users/mrtun/Documents/Work/Portfolio/Project/DTSS/runs/detect/runs/safety_train_smoke"
+}

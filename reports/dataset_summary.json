@@ -1,0 +1,70 @@
+{
+  "preparation_date": "2026-09-16T15:43:17.543303",
+  "source_path": "/Users/mrtun/Documents/Work/Portfolio/Project/DTSS/dataset/css-data",
+  "output_path": "/Users/mrtun/Documents/Work/Portfolio/Project/DTSS/data/processed",
+  "mode": "mvp_3_classes",
+  "class_remap": {
+    "0": 0,
+    "2": 1,
+    "5": 2
+  },
+  "class_names": {
+    "0": "Hardhat",
+    "1": "NO-Hardhat",
+    "2": "Person"
+  },
+  "num_classes": 3,
+  "data_yaml_path": "data/processed/data.yaml",
+  "splits": {
+    "train": {
+      "split": "train",
+      "images_processed": 2605,
+      "images_with_targets": 2535,
+      "images_negative": 70,
+      "total_original_objects": 36895,
+      "total_filtered_objects": 14994,
+      "skipped_invalid": 0,
+      "class_counts": {
+        "0": 3145,
+        "2": 9532,
+        "1": 2317
+      }
+    },
+    "valid": {
+      "split": "valid",
+      "images_processed": 114,
+      "images_with_targets": 84,
+      "images_negative": 30,
+      "total_original_objects": 697,
+      "total_filtered_objects": 314,
+      "skipped_invalid": 0,
+      "class_counts": {
+        "0": 79,
+        "2": 166,
+        "1": 69
+      }
+    },
+    "test": {
+      "split": "test",
+      "images_processed": 82,
+      "images_with_targets": 60,
+      "images_negative": 22,
+      "total_original_objects": 760,
+      "total_filtered_objects": 325,
+      "skipped_invalid": 0,
+      "class_counts": {
+        "0": 110,
+        "2": 174,
+        "1": 41
+      }
+    }
+  },
+  "total_images": 2801,
+  "total_objects": 15633,
+  "original_dataset": {
+    "source": "Construction Site Safety - v28 YOLOv5s (Roboflow)",
+    "kaggle_slug": "snehilsanyal/construction-site-safety-image-dataset-roboflow",
+    "license": "CC BY 4.0",
+    "original_classes": 10
+  }
+}

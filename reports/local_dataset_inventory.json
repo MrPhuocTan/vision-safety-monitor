@@ -1,0 +1,245 @@
+{
+  "inspection_date": "2026-09-16T15:42:41.731632",
+  "source_path": "/Users/mrtun/Documents/Work/Portfolio/Project/DTSS/dataset",
+  "file_counts": {
+    "images": 2825,
+    "labels": 2803,
+    "archives": 0,
+    "videos": 3,
+    "configs": 3,
+    "weights": 3,
+    "notebooks": 1,
+    "readmes": 0,
+    "other": 3
+  },
+  "annotation_format": "yolo",
+  "data_configs": [
+    {
+      "path": "results_yolov8n_100e/kaggle/working/ppe_data.yaml",
+      "is_data_config": true,
+      "class_mapping": [
+        "Hardhat",
+        "Mask",
+        "NO-Hardhat",
+        "NO-Mask",
+        "NO-Safety Vest",
+        "Person",
+        "Safety Cone",
+        "Safety Vest",
+        "machinery",
+        "vehicle"
+      ],
+      "num_classes": 10
+    },
+    {
+      "path": "results_yolov8n_100e/kaggle/working/runs/detect/train/args.yaml",
+      "is_data_config": true
+    }
+  ],
+  "class_mapping": [
+    "Hardhat",
+    "Mask",
+    "NO-Hardhat",
+    "NO-Mask",
+    "NO-Safety Vest",
+    "Person",
+    "Safety Cone",
+    "Safety Vest",
+    "machinery",
+    "vehicle"
+  ],
+  "splits": {
+    "train": {
+      "path": "results_yolov8n_100e/kaggle/working/runs/detect/train",
+      "has_images_dir": false,
+      "has_labels_dir": false
+    },
+    "valid": {
+      "path": "css-data/valid",
+      "has_images_dir": true,
+      "has_labels_dir": true,
+      "image_count": 114,
+      "label_count": 114
+    },
+    "test": {
+      "path": "css-data/test",
+      "has_images_dir": true,
+      "has_labels_dir": true,
+      "image_count": 82,
+      "label_count": 82
+    }
+  },
+  "validation": {
+    "total_images": 196,
+    "total_labels": 196,
+    "paired": 196,
+    "missing_labels": [],
+    "orphan_labels": [],
+    "empty_labels": [
+      "valid/airport_inside_0115_jpg.rf.8277ce4e71886a343bfdb10ce7fb6d4a.txt",
+      "valid/casino_0448_jpg.rf.090df4137a5926092c541ee5c6918868.txt",
+      "valid/hospital-corridor_jpg.rf.bbac7f39a08bac2b0363ee9682bd86b2.txt",
+      "valid/shakespearebookshop_jpg.rf.9a14dbfdd07d9a0cc916cffef0194245.txt",
+      "valid/youtube-232_jpg.rf.f92f310106a11e01495ce8bfae0f9b5a.txt",
+      "valid/youtube-446_jpg.rf.b9d9b80538b79252761946ece0bc6317.txt",
+      "valid/youtube-476_jpg.rf.3744f21a7b74ea642bbcbc8251659001.txt",
+      "valid/youtube-51_jpg.rf.083f4487f9a468d9ff42aa13953f377a.txt",
+      "valid/youtube-540_jpg.rf.b229e14d526db6e53965f59e6146cf15.txt",
+      "valid/youtube-804_jpg.rf.c4250b3c54e1cca8d58622970882f60a.txt",
+      "test/3e7e40981ddd4cdb055c7ffe4c2af5d8_jpg.rf.bac50dc18195e9aeb6f3a21782a3efcb.txt",
+      "test/Bookstore_More_Merchandise_jpg.rf.7ab5add3e28ced74f9b316e794cc04d2.txt",
+      "test/Inside-merge_mov-58_jpg.rf.50147e19cb655e74c2df0047113e82b2.txt",
+      "test/bookstore_44_08_flickr_jpg.rf.244b6f308c529933af798c4063e58601.txt",
+      "test/librairie_51_jpg.rf.56b0500ae2ad3820b4286133b627e59c.txt",
+      "test/youtube-253_jpg.rf.5ad0a2d701e20141940508b809584856.txt",
+      "test/youtube-496_jpg.rf.def4e9964e9a354d0a02f4ac14334a73.txt",
+      "test/youtube-671_jpg.rf.7b08643d6754cabe6caf2b49a963de47.txt"
+    ],
+    "invalid_coordinates": [],
+    "class_distribution": {
+      "0": 189,
+      "5": 340,
+      "4": 196,
+      "3": 153,
+      "7": 102,
+      "2": 110,
+      "1": 49,
+      "6": 136,
+      "8": 99,
+      "9": 83
+    },
+    "objects_per_split": {
+      "valid": {
+        "0": 79,
+        "5": 166,
+        "4": 106,
+        "3": 74,
+        "7": 41,
+        "2": 69,
+        "1": 21,
+        "6": 44,
+        "8": 55,
+        "9": 42
+      },
+      "test": {
+        "0": 110,
+        "3": 79,
+        "4": 90,
+        "5": 174,
+        "6": 92,
+        "9": 41,
+        "2": 41,
+        "7": 61,
+        "8": 44,
+        "1": 28
+      }
+    },
+    "issues": []
+  },
+  "cross_split_duplicates": [],
+  "sample_verification": [
+    {
+      "split": "valid",
+      "image": "-1079-_png_jpg.rf.19092a3937930012f9fd9c1ce57f5a7b.jpg",
+      "readable": true,
+      "shape": [
+        640,
+        640,
+        3
+      ],
+      "label_exists": true,
+      "label_objects": 10
+    },
+    {
+      "split": "valid",
+      "image": "-1429-_png_jpg.rf.78a7894e86c79d018d80fa86f4d000f8.jpg",
+      "readable": true,
+      "shape": [
+        640,
+        640,
+        3
+      ],
+      "label_exists": true,
+      "label_objects": 8
+    },
+    {
+      "split": "valid",
+      "image": "-1969-_png_jpg.rf.41dd58ed3ae83df95fb2417c679d581f.jpg",
+      "readable": true,
+      "shape": [
+        640,
+        640,
+        3
+      ],
+      "label_exists": true,
+      "label_objects": 4
+    },
+    {
+      "split": "test",
+      "image": "-4405-_png_jpg.rf.82b5c10b2acd1cfaa24259ada8e599fe.jpg",
+      "readable": true,
+      "shape": [
+        640,
+        640,
+        3
+      ],
+      "label_exists": true,
+      "label_objects": 4
+    },
+    {
+      "split": "test",
+      "image": "000005_jpg.rf.96e9379ccae638140c4a90fc4b700a2b.jpg",
+      "readable": true,
+      "shape": [
+        640,
+        640,
+        3
+      ],
+      "label_exists": true,
+      "label_objects": 8
+    },
+    {
+      "split": "test",
+      "image": "002551_jpg.rf.ce4b9f934161faa72c80dc6898d37b2d.jpg",
+      "readable": true,
+      "shape": [
+        640,
+        640,
+        3
+      ],
+      "label_exists": true,
+      "label_objects": 10
+    }
+  ],
+  "decision": "LOCAL_VALID_COMPLETE",
+  "decision_reason": "Local dataset is valid and complete. 196 images with 196 paired labels in YOLO format across 3 splits. No Kaggle download needed.",
+  "videos": [
+    {
+      "path": "source_files/source_files/JapanPPE.mp4",
+      "size_bytes": 14115404
+    },
+    {
+      "path": "source_files/source_files/hardhat.mp4",
+      "size_bytes": 4143534
+    },
+    {
+      "path": "source_files/source_files/indianworkers.mp4",
+      "size_bytes": 7672559
+    }
+  ],
+  "weights": [
+    {
+      "path": "results_yolov8n_100e/kaggle/working/runs/detect/train/weights/best.pt",
+      "size_bytes": 6251955
+    },
+    {
+      "path": "results_yolov8n_100e/kaggle/working/runs/detect/train/weights/last.pt",
+      "size_bytes": 6251955
+    },
+    {
+      "path": "results_yolov8n_100e/kaggle/working/yolov8n.pt",
+      "size_bytes": 6534387
+    }
+  ],
+  "archives": []
+}
