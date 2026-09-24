@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vision-safety-monitor"
+version = "0.1.0"
+description = "Real-Time Safety Helmet Compliance and Restricted-Zone Monitoring"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    {name = "Developer"},
+]
+
+dependencies = [
+    "ultralytics>=8.2.0",
+    "opencv-python>=4.8.0",
+    "numpy>=1.26.0",
+    "pyyaml>=6.0",
+    "pydantic>=2.0",
+    "shapely>=2.0",
+    "Pillow>=10.0",
+    "streamlit>=1.30.0",
+    "tqdm>=4.65",
+    "psutil>=5.9",
+    "lapx>=0.5.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "ruff>=0.1.0"]
+onnx = ["onnx>=1.14.0", "onnxruntime>=1.16.0"]
+kaggle = ["kaggle>=1.6.0"]
+
+[project.scripts]
+safety-cli = "apps.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*", "apps*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

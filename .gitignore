@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data directories (large files - download separately)
+data/raw/
+data/processed/
+dataset/
+
+# Model weights (download separately)
+models/*.pt
+models/*.onnx
+models/*.engine
+yolov8n.pt
+
+# Training runs & outputs
+runs/
+
+# Artifacts (generated at runtime)
+artifacts/evidence/
+artifacts/outputs/
+artifacts/benchmarks/
+
+# Kaggle credentials
+kaggle.json
+.kaggle/
+
+# Environment
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Pytest
+.pytest_cache/
+
+# Misc
+vision-safety-sample-agent-plan*.md
+pyrightconfig.json

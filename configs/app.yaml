@@ -1,0 +1,105 @@
+# =============================================================================
+# Vision Safety Monitor — Application Configuration
+# =============================================================================
+
+# --- Model ---
+model:
+  # Path to YOLO weights file (.pt or .onnx)
+  weights: "models/best.pt"
+  # Inference device: "cpu", "cuda", "cuda:0", "mps"
+  device: "cpu"
+  # Input image size for inference
+  imgsz: 640
+  # Detection confidence threshold
+  conf_threshold: 0.35
+  # NMS IoU threshold
+  iou_threshold: 0.45
+  # Maximum detections per frame
+  max_det: 100
+
+# --- Classes ---
+# Original dataset class mapping (from ppe_data.yaml):
+#   0: Hardhat, 1: Mask, 2: NO-Hardhat, 3: NO-Mask,
+#   4: NO-Safety Vest, 5: Person, 6: Safety Cone,
+#   7: Safety Vest, 8: machinery, 9: vehicle
+#
+# MVP target classes (filter at inference):
+classes:
+  target_ids: [0, 2, 5]  # Hardhat, NO-Hardhat, Person
+  names:
+    0: "Hardhat"
+    2: "NO-Hardhat"
+    5: "Person"
+  # Semantic roles for association logic
+  person_class_id: 5
+  hardhat_class_id: 0
+  no_hardhat_class_id: 2
+
+# --- Tracker ---
+tracker:
+  type: "bytetrack"  # "bytetrack" or "botsort"
+  # ByteTrack parameters
+  track_high_thresh: 0.5
+  track_low_thresh: 0.1
+  new_track_thresh: 0.6
+  track_buffer: 30      # Frames to keep lost tracks
+  match_thresh: 0.8
+
+# --- Association ---
+association:
+  # IoU threshold for associating helmet/no-helmet with person
+  iou_threshold: 0.3
+  # Vertical overlap: helmet bbox should be in upper portion of person bbox
+  vertical_ratio: 0.5
+
+# --- Rules ---
+rules:
+  # Helmet violation: frames a person must be NO-Hardhat before alert
+  helmet_persistence_frames: 10
+  # Zone violation: frames a person must be in zone before alert
+  zone_persistence_frames: 15
+  # Cooldown: seconds before same track can trigger same alert type again
+  alert_cooldown_seconds: 30.0
+  # Track timeout: seconds of no detection before clearing track state
+  track_timeout_seconds: 5.0
+
+# --- Zones ---
+# Restricted zone polygon (normalized 0-1 coordinates)
+# Can be overridden by configs/zones.example.json
+zones:
+  - id: "zone-1"
+    name: "Restricted Area"
+    polygon:
+      - [0.1, 0.6]
+      - [0.4, 0.6]
+      - [0.4, 0.95]
+      - [0.1, 0.95]
+    color: [0, 0, 255]  # BGR red
+
+# --- Output ---
+output:
+  save_video: true
+  save_evidence: true
+  evidence_dir: "artifacts/evidence"
+  output_dir: "artifacts/outputs"
+  events_file: "artifacts/outputs/events.jsonl"
+  # Video codec
+  video_codec: "mp4v"
+  video_fps: null  # null = match source FPS
+
+# --- Display ---
+display:
+  show_fps: true
+  show_violation_count: true
+  show_zone_overlay: true
+  show_track_ids: true
+  show_confidence: true
+  bbox_thickness: 2
+  font_scale: 0.6
+  # Colors (BGR)
+  person_color: [255, 200, 0]       # Cyan-ish
+  hardhat_color: [0, 255, 0]        # Green
+  no_hardhat_color: [0, 0, 255]     # Red
+  zone_color: [0, 0, 255]           # Red
+  zone_alpha: 0.25
+  alert_banner_color: [0, 0, 200]   # Dark red

@@ -1,0 +1,21 @@
+{
+  "zones": [
+    {
+      "id": "zone-1",
+      "name": "Restricted Construction Area",
+      "polygon": [
+        [0.1, 0.6],
+        [0.4, 0.6],
+        [0.4, 0.95],
+        [0.1, 0.95]
+      ],
+      "color": [0, 0, 255],
+      "description": "Example restricted zone - adjust polygon coordinates (normalized 0-1) for your camera view"
+    }
+  ],
+  "_notes": {
+    "coordinate_system": "Normalized [0, 1]. Origin at top-left. (x, y) pairs.",
+    "polygon_format": "List of [x, y] vertices defining a closed polygon.",
+    "color_format": "BGR color for zone overlay."
+  }
+}
