@@ -184,42 +184,6 @@ class RuleEngine:
                     violations.append(event)
                     state.last_alert_time[EventType.NO_HARDHAT.value] = current_time
 
-            # --- Rule 2: Zone intrusion ---
-            zone_id = self.check_zone(track_id, person, frame_index, current_time)
-            if zone_id and state.in_zone_frames >= rules_cfg.zone_persistence_frames:
-                if self._can_alert(track_id, EventType.ZONE_INTRUSION.value, current_time):
-                    event = ViolationEvent(
-                        source_id=source_id,
-                        frame_index=frame_index,
-                        track_id=track_id,
-                        event_type=EventType.ZONE_INTRUSION.value,
-                        confidence=person.detection.confidence,
-                        zone_id=zone_id,
-                        bbox=person.detection.bbox,
-                        details=f"Person #{track_id} in restricted zone '{zone_id}' for "
-                                f"{state.in_zone_frames} frames",
-                    )
-                    violations.append(event)
-                    state.last_alert_time[EventType.ZONE_INTRUSION.value] = current_time
-
-            # --- Rule 3: Combined (no hardhat in zone) ---
-            if (zone_id
-                    and state.no_hardhat_frames >= rules_cfg.helmet_persistence_frames
-                    and state.in_zone_frames >= rules_cfg.zone_persistence_frames):
-                if self._can_alert(track_id, EventType.NO_HARDHAT_IN_ZONE.value, current_time):
-                    event = ViolationEvent(
-                        source_id=source_id,
-                        frame_index=frame_index,
-                        track_id=track_id,
-                        event_type=EventType.NO_HARDHAT_IN_ZONE.value,
-                        confidence=person.detection.confidence,
-                        zone_id=zone_id,
-                        bbox=person.detection.bbox,
-                        details=f"Person #{track_id} without hardhat in zone '{zone_id}'",
-                    )
-                    violations.append(event)
-                    state.last_alert_time[EventType.NO_HARDHAT_IN_ZONE.value] = current_time
-
         return violations
 
     def _can_alert(self, track_id: int, event_type: str, current_time: float) -> bool:
@@ -257,8 +221,6 @@ class RuleEngine:
         count = 0
         for state in self._person_states.values():
             if state.no_hardhat_frames >= self.config.rules.helmet_persistence_frames:
-                count += 1
-            if state.in_zone_frames >= self.config.rules.zone_persistence_frames:
                 count += 1
         return count
 

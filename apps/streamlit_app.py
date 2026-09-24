@@ -77,18 +77,7 @@ def main():
         # Rule settings
         st.subheader("Rules")
         helmet_persist = st.slider("Helmet violation frames", 1, 30, 10)
-        zone_persist = st.slider("Zone violation frames", 1, 30, 15)
         cooldown = st.slider("Alert cooldown (s)", 1.0, 120.0, 30.0, 1.0)
-
-        # Zone settings
-        st.subheader("Restricted Zone")
-        zone_enabled = st.checkbox("Enable restricted zone", value=True)
-        if zone_enabled:
-            st.text("Polygon (normalized 0-1):")
-            zone_x1 = st.number_input("X1", 0.0, 1.0, 0.1, 0.05)
-            zone_y1 = st.number_input("Y1", 0.0, 1.0, 0.6, 0.05)
-            zone_x2 = st.number_input("X2", 0.0, 1.0, 0.4, 0.05)
-            zone_y2 = st.number_input("Y2", 0.0, 1.0, 0.95, 0.05)
 
     # --- Main Area: Tabs ---
     tab_upload, tab_events, tab_evidence, tab_results = st.tabs([
@@ -149,24 +138,10 @@ def main():
                     },
                     "rules": {
                         "helmet_persistence_frames": helmet_persist,
-                        "zone_persistence_frames": zone_persist,
                         "alert_cooldown_seconds": cooldown,
                     },
+                    "zones": [],
                 }
-
-                if zone_enabled:
-                    overrides["zones"] = [{
-                        "id": "zone-1",
-                        "name": "Restricted Area",
-                        "polygon": [
-                            [zone_x1, zone_y1],
-                            [zone_x2, zone_y1],
-                            [zone_x2, zone_y2],
-                            [zone_x1, zone_y2],
-                        ],
-                    }]
-                else:
-                    overrides["zones"] = []
 
                 try:
                     config = load_config(config_path, overrides)

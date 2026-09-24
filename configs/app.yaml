@@ -64,17 +64,9 @@ rules:
   track_timeout_seconds: 5.0
 
 # --- Zones ---
-# Restricted zone polygon (normalized 0-1 coordinates)
-# Can be overridden by configs/zones.example.json
-zones:
-  - id: "zone-1"
-    name: "Restricted Area"
-    polygon:
-      - [0.1, 0.6]
-      - [0.4, 0.6]
-      - [0.4, 0.95]
-      - [0.1, 0.95]
-    color: [0, 0, 255]  # BGR red
+# Restricted zone monitoring has been disabled.
+# To re-enable, define polygon coordinates (normalized 0-1).
+zones: []
 
 # --- Output ---
 output:
@@ -91,7 +83,7 @@ output:
 display:
   show_fps: true
   show_violation_count: true
-  show_zone_overlay: true
+  show_zone_overlay: false
   show_track_ids: true
   show_confidence: true
   bbox_thickness: 2

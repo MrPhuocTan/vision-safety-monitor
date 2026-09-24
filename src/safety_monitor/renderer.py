@@ -217,7 +217,7 @@ class Renderer:
             # Count active violations
             violation_count = sum(
                 1 for s in person_states.values()
-                if s.helmet_status == "no_hardhat" or s.current_zone_id is not None
+                if s.helmet_status == "no_hardhat"
             )
             color = (0, 0, 255) if violation_count > 0 else (0, 255, 0)
             cv2.putText(
