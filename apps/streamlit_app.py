@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """
-Streamlit Dashboard — Safety Monitor Web Interface.
-
-Provides video upload, configuration, result playback, event browsing,
-and evidence viewer.
+Vision Safety Monitor — Web Dashboard.
 
 Usage:
-    streamlit run apps/streamlit_app.py
+    python run.py
 """
 
 from __future__ import annotations
@@ -14,130 +11,204 @@ from __future__ import annotations
 import json
 import sys
 import tempfile
-from datetime import datetime
 from pathlib import Path
 
 import cv2
 import numpy as np
 import streamlit as st
 
-# Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.safety_monitor.config import load_config
 from src.safety_monitor.pipeline import SafetyMonitorPipeline
 
-# Page config
+# ─── Page Config ───
 st.set_page_config(
-    page_title="Vision Safety Monitor",
+    page_title="Safety Monitor",
     page_icon="🦺",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
+# ─── Custom CSS ───
+st.markdown("""
+<style>
+    /* Hide Streamlit branding */
+    #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    .stDeployButton {display: none;}
 
-def load_events_from_file(events_path: str) -> list[dict]:
+    /* Top bar */
+    .top-bar {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .top-bar h1 {
+        color: #fff;
+        font-size: 1.6rem;
+        margin: 0;
+        font-weight: 700;
+    }
+    .top-bar .badge {
+        background: #e94560;
+        color: #fff;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    /* Stat cards */
+    .stat-card {
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        border: 1px solid #2a2a4a;
+        border-radius: 12px;
+        padding: 1.2rem;
+        text-align: center;
+    }
+    .stat-card .number {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #e94560;
+    }
+    .stat-card .label {
+        color: #8888aa;
+        font-size: 0.85rem;
+        margin-top: 4px;
+    }
+    .stat-card.green .number { color: #10b981; }
+    .stat-card.blue .number { color: #3b82f6; }
+
+    /* Video container */
+    .video-container {
+        border: 2px solid #2a2a4a;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    /* Sidebar cleanup */
+    section[data-testid="stSidebar"] > div {
+        padding-top: 1rem;
+    }
+
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px;
+        padding: 8px 20px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
+def load_events(path: str) -> list[dict]:
     """Load events from JSONL file."""
     events = []
-    path = Path(events_path)
-    if path.exists():
-        with open(path, "r") as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    try:
-                        events.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        pass
+    p = Path(path)
+    if p.exists():
+        for line in p.read_text().strip().split("\n"):
+            if line:
+                try:
+                    events.append(json.loads(line))
+                except json.JSONDecodeError:
+                    pass
     return events
 
 
+def render_stat_card(label: str, value: str, variant: str = "") -> str:
+    cls = f"stat-card {variant}" if variant else "stat-card"
+    return f'<div class="{cls}"><div class="number">{value}</div><div class="label">{label}</div></div>'
+
+
 def main():
-    # --- Header ---
-    st.title("🦺 Vision Safety Monitor")
-    st.markdown("Real-Time Safety Helmet Compliance and Restricted-Zone Monitoring")
+    # ─── Top Bar ───
+    st.markdown("""
+    <div class="top-bar">
+        <h1>🦺 Safety Monitor</h1>
+        <span class="badge">LIVE</span>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # --- Sidebar ---
+    # ─── Sidebar (Settings) ───
     with st.sidebar:
-        st.header("⚙️ Configuration")
+        st.markdown("### ⚙️ Settings")
 
-        # Config file
-        config_path = st.text_input(
-            "Config file", value="configs/app.yaml",
-            help="Path to application config YAML"
-        )
+        config_path = "configs/app.yaml"
+        weights = st.text_input("Weights", value="models/best.pt")
+        device = st.selectbox("Device", ["cpu", "mps", "cuda"], index=0)
+        conf = st.slider("Sensitivity", 0.1, 0.9, 0.35, 0.05,
+                          help="Lower = detect more (may include false positives)")
+        helmet_frames = st.slider("Violation threshold (frames)", 1, 30, 10,
+                                  help="Consecutive frames before flagging a violation")
+        cooldown = st.slider("Alert cooldown (seconds)", 1.0, 120.0, 30.0, 1.0)
 
-        # Model settings
-        st.subheader("Model")
-        weights = st.text_input("Weights path", value="models/best.pt")
-        device = st.selectbox("Device", ["cpu", "cuda", "mps"], index=0)
-        conf_threshold = st.slider("Confidence threshold", 0.1, 0.9, 0.35, 0.05)
-        imgsz = st.selectbox("Image size", [320, 416, 640, 1280], index=2)
-
-        # Rule settings
-        st.subheader("Rules")
-        helmet_persist = st.slider("Helmet violation frames", 1, 30, 10)
-        cooldown = st.slider("Alert cooldown (s)", 1.0, 120.0, 30.0, 1.0)
-
-    # --- Main Area: Tabs ---
-    tab_upload, tab_events, tab_evidence, tab_results = st.tabs([
-        "📹 Video Processing", "📋 Event History", "🖼️ Evidence", "📊 Results"
+    # ─── Tabs ───
+    tab_monitor, tab_history, tab_evidence = st.tabs([
+        "📹 Monitor", "📋 Event Log", "📸 Evidence"
     ])
 
-    # --- Tab: Video Processing ---
-    with tab_upload:
-        st.header("Video Upload & Processing")
+    # ═══════════════════════════════════════════
+    # TAB 1: MONITOR
+    # ═══════════════════════════════════════════
+    with tab_monitor:
 
-        source_type = st.radio(
-            "Select Video Source", 
-            ["Sample Video", "Upload New Video", "Webcam (Live)"], 
-            horizontal=True
-        )
+        # Source selection row
+        col_source, col_action = st.columns([3, 1])
 
-        video_path_to_process = None
+        with col_source:
+            source_type = st.radio(
+                "Video Source",
+                ["Sample Video", "Upload File", "Webcam"],
+                horizontal=True, label_visibility="collapsed"
+            )
+
+        video_path = None
 
         if source_type == "Sample Video":
-            sample_videos = {
-                "Hardhat Demo (hardhat.mp4)": "dataset/source_files/source_files/hardhat.mp4",
-                "Japan PPE (JapanPPE.mp4)": "dataset/source_files/source_files/JapanPPE.mp4",
-                "Indian Workers (indianworkers.mp4)": "dataset/source_files/source_files/indianworkers.mp4"
+            samples = {
+                "🎬 Hardhat Demo": "dataset/source_files/source_files/hardhat.mp4",
+                "🎬 Japan PPE": "dataset/source_files/source_files/JapanPPE.mp4",
+                "🎬 Indian Workers": "dataset/source_files/source_files/indianworkers.mp4",
             }
-            selected_sample = st.selectbox("Choose a sample video", list(sample_videos.keys()))
-            video_path_to_process = sample_videos[selected_sample]
+            with col_action:
+                pick = st.selectbox("Video", list(samples.keys()), label_visibility="collapsed")
+            video_path = samples[pick]
 
-        elif source_type == "Webcam (Live)":
-            video_path_to_process = 0
-            st.info("Webcam processing will start in a separate window. Press 'q' in that window to stop.")
-
-        else:
-            uploaded_file = st.file_uploader(
-                "Upload a video file",
+        elif source_type == "Upload File":
+            uploaded = st.file_uploader(
+                "Drop a video file here",
                 type=["mp4", "avi", "mov", "mkv"],
-                help="Upload a construction site video for safety analysis"
+                label_visibility="collapsed",
             )
-            if uploaded_file is not None:
+            if uploaded:
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
-                    tmp.write(uploaded_file.getvalue())
-                    video_path_to_process = tmp.name
+                    tmp.write(uploaded.getvalue())
+                    video_path = tmp.name
 
-        col1, col2 = st.columns(2)
-        with col1:
-            save_output = st.checkbox("Save output video", value=True)
-        with col2:
-            show_progress = st.checkbox("Show progress", value=True)
+        elif source_type == "Webcam":
+            video_path = 0
 
-        if video_path_to_process is not None:
-            if st.button("🚀 Start Processing", type="primary"):
-                # Build config overrides
+        # Start button
+        if video_path is not None:
+            if st.button("▶  Start Monitoring", type="primary", use_container_width=True):
+
                 overrides = {
                     "model": {
                         "weights": weights,
                         "device": device,
-                        "conf_threshold": conf_threshold,
-                        "imgsz": imgsz,
+                        "conf_threshold": conf,
+                        "imgsz": 640,
                     },
                     "rules": {
-                        "helmet_persistence_frames": helmet_persist,
+                        "helmet_persistence_frames": helmet_frames,
                         "alert_cooldown_seconds": cooldown,
                     },
                     "zones": [],
@@ -147,22 +218,28 @@ def main():
                     config = load_config(config_path, overrides)
                     pipeline = SafetyMonitorPipeline(config)
 
-                    with st.spinner("Loading model..."):
+                    with st.spinner("Initializing system..."):
                         pipeline.initialize()
 
-                    # Process video
                     from src.safety_monitor.video_source import VideoSource
-
-                    video = VideoSource(video_path_to_process)
+                    video = VideoSource(video_path)
                     video.open()
 
-                    progress_bar = st.progress(0) if show_progress else None
-                    status_text = st.empty()
-                    result_placeholder = st.empty()
+                    # Layout: video left, stats right
+                    col_vid, col_stats = st.columns([3, 1])
 
-                    total_frames = video.total_frames
+                    with col_vid:
+                        video_frame = st.empty()
+
+                    with col_stats:
+                        st_fps = st.empty()
+                        st_persons = st.empty()
+                        st_violations = st.empty()
+                        st_events = st.empty()
+                        progress = st.empty()
+
+                    total = video.total_frames
                     processed = 0
-                    all_violations = []
 
                     for frame_data in video.frames():
                         annotated, result = pipeline.process_frame(
@@ -172,186 +249,124 @@ def main():
                             video.source_id,
                         )
 
-                        # Hiển thị trực tiếp video ngay trên trình duyệt
+                        # Show video
                         img_rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
-                        result_placeholder.image(img_rgb, channels="RGB", use_container_width=True)
+                        video_frame.image(img_rgb, channels="RGB", use_container_width=True)
 
+                        # Record events
                         for event in result.violations:
                             pipeline.event_manager.record_event(event, frame_data.frame)
-                            all_violations.append(event)
 
                         processed += 1
 
-                        if progress_bar and total_frames > 0:
-                            progress_bar.progress(min(processed / total_frames, 1.0))
-
-                        if processed % 30 == 0:
-                            status_text.text(
-                                f"Frame {processed}/{total_frames} | "
-                                f"FPS: {result.fps:.1f} | "
-                                f"Events: {pipeline.event_manager.event_count}"
+                        # Update stats every 5 frames (perf optimization)
+                        if processed % 5 == 0 or processed == 1:
+                            n_persons = len(result.tracked_persons)
+                            n_violations = sum(
+                                1 for s in result.person_states.values()
+                                if s.helmet_status == "no_hardhat"
                             )
+
+                            st_fps.markdown(render_stat_card("FPS", f"{result.fps:.0f}", "green"), unsafe_allow_html=True)
+                            st_persons.markdown(render_stat_card("Persons", str(n_persons), "blue"), unsafe_allow_html=True)
+                            st_violations.markdown(render_stat_card("Violations", str(n_violations)), unsafe_allow_html=True)
+                            st_events.markdown(render_stat_card("Total Events", str(pipeline.event_manager.event_count), "blue"), unsafe_allow_html=True)
+
+                            if total > 0:
+                                pct = min(processed / total, 1.0)
+                                progress.progress(pct, text=f"{processed}/{total}")
 
                     video.close()
 
-                    st.success(
-                        f"✅ Processing complete! "
-                        f"Processed {processed} frames, "
-                        f"found {pipeline.event_manager.event_count} events."
-                    )
-
-                    # Show summary
-                    col1, col2, col3 = st.columns(3)
-                    col1.metric("Frames", processed)
-                    col2.metric("Events", pipeline.event_manager.event_count)
-                    col3.metric("Avg FPS", f"{result.fps:.1f}")
+                    st.success(f"✅ Complete — {processed} frames processed, {pipeline.event_manager.event_count} violations recorded.")
 
                 except FileNotFoundError as e:
                     st.error(f"❌ {e}")
                 except Exception as e:
-                    st.error(f"❌ Error: {e}")
+                    st.error(f"❌ {e}")
                     st.exception(e)
-
         else:
-            st.info(
-                "👆 Please select a video source above to begin safety analysis."
-            )
+            st.info("Select a video source above, then press **Start Monitoring**.")
 
-    # --- Tab: Event History ---
-    with tab_events:
-        st.header("Event History")
-
-        events_path = st.text_input(
-            "Events file", value="artifacts/outputs/events.jsonl"
-        )
-
-        if st.button("🔄 Refresh Events"):
-            st.rerun()
-
-        events = load_events_from_file(events_path)
+    # ═══════════════════════════════════════════
+    # TAB 2: EVENT LOG
+    # ═══════════════════════════════════════════
+    with tab_history:
+        events = load_events("artifacts/outputs/events.jsonl")
 
         if events:
             # Filters
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns([2, 2, 1])
             with col1:
-                event_types = list(set(e.get("event_type", "") for e in events))
-                filter_type = st.multiselect("Filter by type", event_types, default=event_types)
+                types = list(set(e.get("event_type", "") for e in events))
+                sel_types = st.multiselect("Type", types, default=types)
             with col2:
-                track_ids = sorted(set(e.get("track_id", 0) for e in events))
-                filter_track = st.multiselect("Filter by track", track_ids, default=track_ids)
+                tracks = sorted(set(e.get("track_id", 0) for e in events))
+                sel_tracks = st.multiselect("Person ID", tracks, default=tracks)
+            with col3:
+                if st.button("🔄 Refresh"):
+                    st.rerun()
 
-            # Apply filters
             filtered = [
                 e for e in events
-                if e.get("event_type") in filter_type
-                and e.get("track_id") in filter_track
+                if e.get("event_type") in sel_types and e.get("track_id") in sel_tracks
             ]
 
-            st.metric("Total Events", len(filtered))
+            # Summary row
+            c1, c2, c3 = st.columns(3)
+            c1.markdown(render_stat_card("Total Events", str(len(filtered))), unsafe_allow_html=True)
 
-            # Display as table
+            no_hat = sum(1 for e in filtered if e.get("event_type") == "NO_HARDHAT")
+            c2.markdown(render_stat_card("No Hardhat", str(no_hat)), unsafe_allow_html=True)
+
+            unique_persons = len(set(e.get("track_id") for e in filtered))
+            c3.markdown(render_stat_card("Unique Persons", str(unique_persons), "blue"), unsafe_allow_html=True)
+
+            st.markdown("---")
+
+            # Table
             if filtered:
                 import pandas as pd
                 df = pd.DataFrame(filtered)
-                display_cols = [
-                    c for c in ["timestamp_utc", "event_type", "track_id",
-                                "frame_index", "confidence", "zone_id", "details"]
-                    if c in df.columns
-                ]
-                st.dataframe(df[display_cols], use_container_width=True)
+                show_cols = [c for c in ["timestamp_utc", "event_type", "track_id", "frame_index", "confidence", "details"] if c in df.columns]
+                st.dataframe(df[show_cols], use_container_width=True, hide_index=True)
 
                 # Export
-                col1, col2 = st.columns(2)
-                with col1:
-                    csv_data = df.to_csv(index=False)
-                    st.download_button(
-                        "📥 Export CSV", csv_data, "events.csv", "text/csv"
-                    )
-                with col2:
-                    json_data = json.dumps(filtered, indent=2)
-                    st.download_button(
-                        "📥 Export JSON", json_data, "events.json", "application/json"
-                    )
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    st.download_button("📥 Export CSV", df.to_csv(index=False), "events.csv", "text/csv")
+                with col_b:
+                    st.download_button("📥 Export JSON", json.dumps(filtered, indent=2), "events.json", "application/json")
         else:
-            st.info("No events found. Process a video first.")
+            st.info("No events recorded yet. Run a monitoring session first.")
 
-    # --- Tab: Evidence ---
+    # ═══════════════════════════════════════════
+    # TAB 3: EVIDENCE
+    # ═══════════════════════════════════════════
     with tab_evidence:
-        st.header("Evidence Images")
-
         evidence_dir = Path("artifacts/evidence")
+
         if evidence_dir.exists():
             images = sorted(evidence_dir.glob("*.jpg"), reverse=True)
 
             if images:
-                st.text(f"Found {len(images)} evidence images")
+                st.markdown(f"**{len(images)}** evidence captures")
 
-                # Grid display
-                cols = st.columns(3)
-                for i, img_path in enumerate(images[:12]):
-                    with cols[i % 3]:
+                cols = st.columns(4)
+                for i, img_path in enumerate(images[:16]):
+                    with cols[i % 4]:
                         img = cv2.imread(str(img_path))
                         if img is not None:
                             img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                            st.image(img_rgb, caption=img_path.name, use_container_width=True)
+                            # Clean caption: extract type and person ID
+                            name = img_path.stem
+                            parts = name.split("_")
+                            caption = f"{parts[0]}_{parts[1]} — ID {parts[2].replace('track', '#')}" if len(parts) >= 3 else name
+                            st.image(img_rgb, caption=caption, use_container_width=True)
             else:
-                st.info("No evidence images found. Process a video first.")
+                st.info("No evidence captures yet.")
         else:
-            st.info("Evidence directory does not exist yet.")
-
-    # --- Tab: Results ---
-    with tab_results:
-        st.header("Evaluation & Benchmark Results")
-
-        # Show evaluation results if available
-        eval_files = list(Path("reports").glob("evaluation_*.json")) if Path("reports").exists() else []
-        if eval_files:
-            for eval_file in eval_files:
-                with open(eval_file) as f:
-                    eval_data = json.load(f)
-
-                st.subheader(f"Evaluation: {eval_file.name}")
-                metrics = eval_data.get("metrics", {})
-
-                cols = st.columns(4)
-                cols[0].metric("mAP@50", f"{metrics.get('mAP50', 0):.4f}")
-                cols[1].metric("mAP@50-95", f"{metrics.get('mAP50_95', 0):.4f}")
-                cols[2].metric("Precision", f"{metrics.get('precision', 0):.4f}")
-                cols[3].metric("Recall", f"{metrics.get('recall', 0):.4f}")
-
-                if "per_class" in metrics:
-                    st.subheader("Per-Class Results")
-                    import pandas as pd
-                    pc_data = []
-                    for name, vals in metrics["per_class"].items():
-                        pc_data.append({
-                            "Class": name,
-                            "AP@50": vals.get("ap50", 0),
-                            "AP@50-95": vals.get("ap50_95", 0),
-                            "Precision": vals.get("precision", 0),
-                            "Recall": vals.get("recall", 0),
-                        })
-                    st.dataframe(pd.DataFrame(pc_data), use_container_width=True)
-        else:
-            st.info("No evaluation results found. Run `python scripts/evaluate.py` first.")
-
-        # Show benchmark results
-        bench_files = list(Path("artifacts/benchmarks").glob("benchmark_*.json")) if Path("artifacts/benchmarks").exists() else []
-        if bench_files:
-            st.divider()
-            for bench_file in bench_files:
-                with open(bench_file) as f:
-                    bench_data = json.load(f)
-
-                st.subheader(f"Benchmark: {bench_file.name}")
-                inf = bench_data.get("inference_time_ms", {})
-                fps = bench_data.get("fps", {})
-
-                cols = st.columns(4)
-                cols[0].metric("Mean FPS", f"{fps.get('mean', 0):.1f}")
-                cols[1].metric("Mean Latency", f"{inf.get('mean', 0):.1f} ms")
-                cols[2].metric("P95 Latency", f"{inf.get('p95', 0):.1f} ms")
-                cols[3].metric("P99 Latency", f"{inf.get('p99', 0):.1f} ms")
+            st.info("No evidence directory found.")
 
 
 if __name__ == "__main__":
